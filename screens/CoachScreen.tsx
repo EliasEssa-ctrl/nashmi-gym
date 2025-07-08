@@ -104,11 +104,14 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#121212', padding: 16 },
   title: { fontSize: 22, color: '#fff', marginBottom: 12, textAlign: 'center' },
   input: {
-    backgroundColor: '#1e1e1e',
+    backgroundColor: '#fff',
     color: '#fff',
     padding: 12,
     borderRadius: 10,
     marginBottom: 10,
+    
+    
+    
   },
   section: { marginBottom: 20 },
   muscleTitle: { color: '#4CAF50', fontSize: 18, marginBottom: 6 },
@@ -127,6 +130,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     marginVertical: 16,
+    
   },
   buttonText: { color: '#fff', fontSize: 18 },
 });
