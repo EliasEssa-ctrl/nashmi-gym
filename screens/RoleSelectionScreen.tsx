@@ -117,6 +117,12 @@ export default function RoleSelectionScreen() {
         <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
           <Text style={styles.link}>إنشاء حساب جديد</Text>
         </TouchableOpacity>
+       <TouchableOpacity
+  style={styles.floatingButton}
+  onPress={() => navigation.navigate('PlayerPlans')}
+>
+  <Text style={styles.floatingButtonText}>الدخول كمدرب</Text>
+</TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -130,6 +136,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  floatingButton: {
+  position: 'absolute',
+  bottom: 10,
+  alignSelf: 'center',
+  backgroundColor: '#FFD700',
+  paddingHorizontal: 20,
+  paddingVertical: 10,
+  borderRadius: 20,
+  opacity: 0.6, // مش واضح كثير
+},
+floatingButtonText: {
+  color: '#000',
+  fontWeight: 'bold',
+},
+
   logo: {
     width: 180,
     height: 180,
