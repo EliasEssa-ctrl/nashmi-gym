@@ -131,7 +131,8 @@ export default function PlayerPlansScreen() {
             style={styles.playerButton}
             onPress={() => fetchPlayerPlans(name)}
           >
-            <Text style={styles.playerText}>{idx + 1}. {name}</Text>
+            <Text style={styles.playerText}> {idx + 1}</Text>
+            <Text style={styles.playerText}> {name}</Text>
           </TouchableOpacity>
         ))
       )}
