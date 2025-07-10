@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
 import { collection, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { db } from '../config/firebaseConfig';
+import { db, auth } from '../config/firebaseConfig';
+import { signOut } from 'firebase/auth';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -56,6 +57,18 @@ export default function PlayerPlansScreen() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Login' }],
+      });
+    } catch (error) {
+      Alert.alert('خطأ', 'فشل في تسجيل الخروج');
+    }
+  };
+
   const renderDay = (plan: Workout, day: string) => {
     const muscles = plan.workoutPlan[day];
     return (
@@ -83,7 +96,13 @@ export default function PlayerPlansScreen() {
 
   return (
     <ScrollView style={styles.container}>
-      <Image source={require('../assets/logo.png')} style={styles.logo} />
+      <View style={styles.headerRow}>
+        <Image source={require('../assets/logo.png')} style={styles.logo} />
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutText}>🚪 تسجيل الخروج</Text>
+        </TouchableOpacity>
+      </View>
+
       <Text style={styles.title}>📋 خطط تمارين اللاعبين</Text>
 
       {selectedPlayer ? (
@@ -158,7 +177,20 @@ export default function PlayerPlansScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#121212', padding: 16 },
-  logo: { width: 130, height: 130, resizeMode: 'contain', alignSelf: 'center', marginBottom: 10 },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10
+  },
+  logo: { width: 100, height: 100, resizeMode: 'contain' },
+  logoutButton: {
+    backgroundColor: '#444',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8
+  },
+  logoutText: { color: '#fff', fontWeight: 'bold' },
   title: { fontSize: 22, color: '#FFD700', textAlign: 'center', marginBottom: 10 },
   backButton: { color: '#FFD700', marginBottom: 10, fontSize: 16 },
   subTitle: { fontSize: 18, color: '#fff', marginBottom: 10 },
