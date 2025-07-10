@@ -5,7 +5,7 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import { db } from '../config/firebaseConfig';
-import { addDoc, collection, getDocs } from 'firebase/firestore';
+import { addDoc, collection, getDocs, query, where, updateDoc, doc } from 'firebase/firestore';
 import { muscleExercises } from '../data/detailedExercises';
 import { useRoute, RouteProp, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -53,7 +53,7 @@ export default function CoachScreen() {
 
       const backHandler = BackHandler.addEventListener('hardwareBackPress', onBackPress);
 
-      return () => backHandler.remove(); // ✅ استخدام الطريقة الصحيحة
+      return () => backHandler.remove();
     }, [])
   );
 
@@ -85,16 +85,33 @@ export default function CoachScreen() {
   const handleSave = async () => {
     if (!selectedPlayer) return Alert.alert('خطأ', 'يرجى اختيار اللاعب');
     try {
-      await addDoc(collection(db, 'workouts'), {
-        playerName: selectedPlayer,
-        startDate: startDate.toDateString(),
-        endDate: endDate.toDateString(),
-        duration: getDuration(),
-        workoutPlan
-      });
-      Alert.alert('✅ تم الحفظ', 'تم حفظ خطة التمارين بنجاح');
+      const q = query(collection(db, 'workouts'), where('playerName', '==', selectedPlayer));
+      const snapshot = await getDocs(q);
+
+      if (!snapshot.empty) {
+        const docRef = snapshot.docs[0].ref;
+        const existingData = snapshot.docs[0].data();
+        const mergedPlan = { ...existingData.workoutPlan, ...workoutPlan };
+
+        await updateDoc(docRef, {
+          startDate: startDate.toDateString(),
+          endDate: endDate.toDateString(),
+          duration: getDuration(),
+          workoutPlan: mergedPlan
+        });
+        Alert.alert('✅ تم التحديث', 'تم تعديل خطة التمارين بنجاح');
+      } else {
+        await addDoc(collection(db, 'workouts'), {
+          playerName: selectedPlayer,
+          startDate: startDate.toDateString(),
+          endDate: endDate.toDateString(),
+          duration: getDuration(),
+          workoutPlan
+        });
+        Alert.alert('✅ تم الحفظ', 'تم حفظ خطة التمارين بنجاح');
+      }
     } catch (e) {
-      Alert.alert('❌ خطأ', 'فشل في الحفظ');
+      Alert.alert('❌ خطأ', 'فشل في الحفظ أو التحديث');
     }
   };
 
@@ -147,7 +164,6 @@ export default function CoachScreen() {
 
       <Text style={styles.label}>مدة الاشتراك: {getDuration()} يوم</Text>
 
-      {/* زر الحفظ تم وضعه هنا لرفعه لأعلى */}
       <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
         <Text style={styles.saveText}>💾 حفظ الخطة</Text>
       </TouchableOpacity>

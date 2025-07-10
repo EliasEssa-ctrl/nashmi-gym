@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
-import { collection, getDocs } from 'firebase/firestore';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
+import { collection, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -13,6 +13,7 @@ interface Workout {
   endDate: string;
   duration: number;
   workoutPlan: Record<string, Record<string, string[]>>;
+  id?: string; // Document ID for updates/deletes
 }
 
 export default function PlayerPlansScreen() {
@@ -36,13 +37,23 @@ export default function PlayerPlansScreen() {
     const snapshot = await getDocs(collection(db, 'workouts'));
     const playerPlans = snapshot.docs
       .filter(doc => doc.data().playerName === playerName)
-      .map(doc => doc.data() as Workout);
+      .map(doc => ({ id: doc.id, ...doc.data() } as Workout));
     setPlans(playerPlans);
     setSelectedPlayer(playerName);
   };
 
   const handleEditPlayer = (playerName: string) => {
     navigation.navigate('Coach', { selectedPlayer: playerName });
+  };
+
+  const handleDeletePlan = async (planId: string) => {
+    try {
+      await deleteDoc(doc(db, 'workouts', planId));
+      Alert.alert('تم الحذف', 'تم حذف الخطة بنجاح');
+      if (selectedPlayer) fetchPlayerPlans(selectedPlayer);
+    } catch (error) {
+      Alert.alert('خطأ', 'حدث خطأ أثناء الحذف');
+    }
   };
 
   const renderDay = (plan: Workout, day: string) => {
@@ -92,36 +103,41 @@ export default function PlayerPlansScreen() {
               لا توجد خطة تمارين لهذا اللاعب بعد.
             </Text>
           ) : (
-            <>
-              {(() => {
-                const plan = plans[0];
-                const today = new Date();
-                const end = new Date(plan.endDate);
-                const remaining = Math.max(0, Math.floor((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
-                const expired = remaining === 0;
+            plans.map((plan, index) => {
+              const today = new Date();
+              const end = new Date(plan.endDate);
+              const remaining = Math.max(0, Math.floor((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
+              const expired = remaining === 0;
 
-                return (
-                  <View
-                    style={[styles.planCard, expired && { borderColor: 'red', borderWidth: 2 }]}
+              return (
+                <View
+                  key={index}
+                  style={[styles.planCard, expired && { borderColor: 'red', borderWidth: 2 }]}
+                >
+                  <Text style={styles.planDate}>
+                    من {plan.startDate} إلى {plan.endDate} ({plan.duration} يوم)
+                  </Text>
+                  <Text style={{ color: expired ? 'red' : '#FFD700', marginBottom: 8 }}>
+                    {expired ? '⛔ انتهى الاشتراك' : `⏳ المتبقي: ${remaining} يوم`}
+                  </Text>
+
+                  {renderDay(plan, 'الأحد')}
+                  {renderDay(plan, 'الاثنين')}
+                  {renderDay(plan, 'الثلاثاء')}
+                  {renderDay(plan, 'الأربعاء')}
+                  {renderDay(plan, 'الخميس')}
+                  {renderDay(plan, 'الجمعة')}
+                  {renderDay(plan, 'السبت')}
+
+                  <TouchableOpacity
+                    style={[styles.editButton, { marginTop: 10, backgroundColor: '#e53935' }]}
+                    onPress={() => handleDeletePlan(plan.id!)}
                   >
-                    <Text style={styles.planDate}>
-                      من {plan.startDate} إلى {plan.endDate} ({plan.duration} يوم)
-                    </Text>
-                    <Text style={{ color: expired ? 'red' : '#FFD700', marginBottom: 8 }}>
-                      {expired ? '⛔ انتهى الاشتراك' : `⏳ المتبقي: ${remaining} يوم`}
-                    </Text>
-
-                    {renderDay(plan, 'الأحد')}
-                    {renderDay(plan, 'الاثنين')}
-                    {renderDay(plan, 'الثلاثاء')}
-                    {renderDay(plan, 'الأربعاء')}
-                    {renderDay(plan, 'الخميس')}
-                    {renderDay(plan, 'الجمعة')}
-                    {renderDay(plan, 'السبت')}
-                  </View>
-                );
-              })()}
-            </>
+                    <Text style={{ color: '#fff', fontWeight: 'bold' }}>🗑️ حذف الخطة</Text>
+                  </TouchableOpacity>
+                </View>
+              );
+            })
           )}
         </>
       ) : (
@@ -176,4 +192,3 @@ const styles = StyleSheet.create({
   },
   editText: { color: '#000', fontWeight: 'bold' }
 });
-// This file defines the PlayerPlansScreen component, which allows coaches to view and manage workout plans for players.َِ
