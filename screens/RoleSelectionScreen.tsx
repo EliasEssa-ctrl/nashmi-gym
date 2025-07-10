@@ -117,12 +117,22 @@ export default function RoleSelectionScreen() {
         <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
           <Text style={styles.link}>إنشاء حساب جديد</Text>
         </TouchableOpacity>
-       <TouchableOpacity
-  style={styles.floatingButton}
-  onPress={() => navigation.navigate('PlayerPlans')}
->
-  <Text style={styles.floatingButtonText}>الدخول كمدرب</Text>
-</TouchableOpacity>
+       <View style={styles.guestButtonsContainer}>
+  <TouchableOpacity
+    style={styles.guestButton}
+    onPress={() => navigation.navigate('Player', { username: 'qotibah' })}
+  >
+    <Text style={styles.guestButtonText}>الدخول كـ لاعب</Text>
+  </TouchableOpacity>
+
+   <TouchableOpacity
+    style={styles.guestButton}
+    onPress={() => navigation.navigate('Coach', { selectedPlayer: ' '  })}
+  >
+    <Text style={styles.guestButtonText}>الدخول كـ لاعب</Text>
+  </TouchableOpacity>
+
+</View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -136,20 +146,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  floatingButton: {
-  position: 'absolute',
-  bottom: 10,
-  alignSelf: 'center',
-  backgroundColor: '#FFD700',
-  paddingHorizontal: 20,
-  paddingVertical: 10,
-  borderRadius: 20,
-  opacity: 0.6, // مش واضح كثير
+ guestButtonsContainer: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  width: '90%',
+  marginTop: 20,
 },
-floatingButtonText: {
+
+guestButton: {
+  backgroundColor: '#FFD700',
+  paddingVertical: 12,
+  paddingHorizontal: 20,
+  borderRadius: 10,
+  flex: 1,
+  marginHorizontal: 5,
+  alignItems: 'center',
+},
+
+guestButtonText: {
   color: '#000',
   fontWeight: 'bold',
+  fontSize: 14,
 },
+
 
   logo: {
     width: 180,
