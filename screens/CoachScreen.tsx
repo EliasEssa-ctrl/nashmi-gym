@@ -1,136 +1,221 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import {
+  View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, BackHandler
+} from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { Picker } from '@react-native-picker/picker';
 import { db } from '../config/firebaseConfig';
-import { collection, addDoc } from 'firebase/firestore';
+import { addDoc, collection, getDocs } from 'firebase/firestore';
+import { muscleExercises } from '../data/detailedExercises';
+import { useRoute, RouteProp, useNavigation, useFocusEffect } from '@react-navigation/native';
+import { RootStackParamList } from '../navigation/AppNavigator';
 
-// العضلات وتمارينها
-const musclesData: Record<string, string[]> = {
-  صدر: ['بنش مستوي', 'بنش مائل', 'بنش مقلوب', 'تفتيح مستوي', 'تفتيح مائل', 'كابل عالي', 'كابل منخفض', 'دمبل مستوي', 'دمبل مائل', 'بنش آلة', 'ضغط أرضي', 'غطس', 'بوش أب', 'بنش سميث', 'تفتيح سميث', 'سحب علوي', 'ضغط مقبض', 'بنش واسع', 'بنش ضيق', 'بنش توقف'],
-  ظهر: ['سحب أمامي', 'سحب خلفي', 'بار أرضي', 'دامبل فردي', 'دامبل مزدوج', 'تي بار', 'بلوفر', 'هايمبول', 'سحب علوي واسع', 'سحب سفلي', 'سحب ضيق', 'سحب جانبي', 'رفرفة ظهر', 'آلة ظهر', 'رفرفة سميث', 'هاك ظهر', 'رفع ترابيس', 'كابل ظهر', 'دمبل ظهر', 'بول أب'],
-  أرجل: ['سكوات', 'سكوات أمامي', 'بريس أرجل', 'لانجز', 'رفرفة أمامية', 'رفرفة خلفية', 'رفرفة جانبية', 'سمانة واقف', 'سمانة جالس', 'سمانة آلة', 'مشية لانجز', 'دمبل أرجل', 'بار أرجل', 'كابل أرجل', 'ضغط أرجل', 'سميث سكوات', 'رفرفة دمبل', 'رفع سمانة', 'جسر أرداف', 'ستيف ديدلفت'],
-  أكتاف: ['ضغط أمامي', 'ضغط خلفي', 'رفرفة جانبية', 'رفرفة أمامية', 'رفرفة خلفية', 'بار أمامي', 'بار خلفي', 'دمبل جانبي', 'دمبل خلفي', 'دمبل أمامي', 'كابل جانبي', 'كابل خلفي', 'كابل أمامي', 'آلة أكتاف', 'سميث أكتاف', 'سحب دمبل', 'سحب بار', 'كروس أكتاف', 'ضغط أرنولد', 'شرايح أمامية'],
-  بايسبس: ['بار مستقيم', 'بار Z', 'دمبل بالتبادل', 'دمبل معكوس', 'كابل بايسبس', 'جهاز بايسبس', 'تركيز بايسبس', 'كروس بايسبس', 'بار على مقعد', 'سميث بايسبس', 'همر', 'بار مفتوح', 'دمبل دوران', 'سحب عكسي', 'بايسبس مزدوج', 'دمبل على مقعد', 'بار خفيف', 'بار ثقيل', 'رفرفة بايسبس', 'آلة بايسبس'],
-  ترايسبس: ['بار ضيق', 'دمبل خلف الرأس', 'كابل سفلي', 'كابل علوي', 'كروس تراي', 'جهاز ترايسبس', 'غطس ترايسبس', 'بوش أب ضيق', 'سميث ترايسبس', 'رفرفة ترايسبس', 'مطرقة تراي', 'كابل عكسي', 'دمبل تمديد', 'كابل مزدوج', 'بار معكوس', 'ضغط خلفي', 'بار تراي', 'دمبل تراي واقف', 'آلة تراي', 'هامر تراي'],
-  معدة: ['كورنش عادي', 'كورنش مع دوران', 'رفع أرجل', 'بلانك', 'بلانك جانبي', 'عجلة معدة', 'كابل معدة', 'جهاز معدة', 'بار معدة', 'سكوات معدة', 'جسر معدة', 'رفع أرجل معلق', 'بلانك طويل', 'تمدد معدة', 'كورنش سميث', 'ضغط معدة', 'كروس معدة', 'انحناء معدة', 'رفرفة معدة', 'كورنش بالكابل']
-};
+const daysOfWeek = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+
+type CoachRouteProp = RouteProp<RootStackParamList, 'Coach'>;
 
 export default function CoachScreen() {
-  const [playerName, setPlayerName] = useState('');
-  const [split, setSplit] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [selectedExercises, setSelectedExercises] = useState<Record<string, string[]>>({});
+  const route = useRoute<CoachRouteProp>();
+  const navigation = useNavigation();
 
-  const toggleExercise = (muscle: string, exercise: string) => {
-    setSelectedExercises(prev => {
-      const current = prev[muscle] || [];
-      return {
-        ...prev,
-        [muscle]: current.includes(exercise)
-          ? current.filter(e => e !== exercise)
-          : [...current, exercise],
+  const [players, setPlayers] = useState<string[]>([]);
+  const [selectedPlayer, setSelectedPlayer] = useState('');
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date(new Date().setMonth(new Date().getMonth() + 1)));
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
+  const [expandedDay, setExpandedDay] = useState('');
+  const [expandedMuscle, setExpandedMuscle] = useState('');
+  const [workoutPlan, setWorkoutPlan] = useState<Record<string, Record<string, string[]>>>({});
+
+  useEffect(() => {
+    const fetchPlayers = async () => {
+      const snapshot = await getDocs(collection(db, 'users'));
+      const playerNames = snapshot.docs
+        .map(doc => doc.data())
+        .filter(user => user.role !== 'coach')
+        .map(user => user.name);
+      setPlayers(playerNames);
+    };
+    fetchPlayers();
+  }, []);
+
+  useEffect(() => {
+    if (route.params?.selectedPlayer) setSelectedPlayer(route.params.selectedPlayer);
+  }, [route.params]);
+
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        navigation.replace('PlayerPlans');
+        return true;
       };
+
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+
+      return () => backHandler.remove(); // ✅ استخدام الطريقة الصحيحة
+    }, [])
+  );
+
+  const toggleDay = (day: string) => {
+    setExpandedDay(prev => (prev === day ? '' : day));
+    setExpandedMuscle('');
+  };
+
+  const toggleMuscle = (muscle: string) => {
+    setExpandedMuscle(prev => (prev === muscle ? '' : muscle));
+  };
+
+  const toggleExercise = (day: string, muscle: string, exercise: string) => {
+    setWorkoutPlan(prev => {
+      const dayPlan = prev[day] || {};
+      const exercises = dayPlan[muscle] || [];
+      const updated = exercises.includes(exercise)
+        ? exercises.filter(e => e !== exercise)
+        : [...exercises, exercise];
+      return { ...prev, [day]: { ...dayPlan, [muscle]: updated } };
     });
   };
 
+  const getDuration = () => {
+    const diff = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    return diff > 0 ? diff : 0;
+  };
+
   const handleSave = async () => {
-    if (!playerName || !split || !startDate || !endDate) {
-      Alert.alert('خطأ', 'يرجى تعبئة جميع الحقول');
-      return;
-    }
-
-    const exercisesArray = Object.keys(selectedExercises).map(muscle => ({
-      muscle,
-      selected: selectedExercises[muscle],
-    }));
-
+    if (!selectedPlayer) return Alert.alert('خطأ', 'يرجى اختيار اللاعب');
     try {
       await addDoc(collection(db, 'workouts'), {
-        playerName,
-        split,
-        startDate,
-        endDate,
-        exercises: exercisesArray,
+        playerName: selectedPlayer,
+        startDate: startDate.toDateString(),
+        endDate: endDate.toDateString(),
+        duration: getDuration(),
+        workoutPlan
       });
-      Alert.alert('✅ تم الحفظ', 'تم حفظ التمارين بنجاح');
-      setPlayerName('');
-      setSplit('');
-      setStartDate('');
-      setEndDate('');
-      setSelectedExercises({});
+      Alert.alert('✅ تم الحفظ', 'تم حفظ خطة التمارين بنجاح');
     } catch (e) {
       Alert.alert('❌ خطأ', 'فشل في الحفظ');
-      console.error(e);
     }
   };
 
   return (
     <ScrollView style={styles.container}>
+      <Image source={require('../assets/logo.png')} style={styles.logo} />
       <Text style={styles.title}>📋 إعداد خطة تمرين</Text>
 
-      <TextInput style={styles.input} placeholder="اسم اللاعب" value={playerName} onChangeText={setPlayerName} />
-      <TextInput style={styles.input} placeholder="التقسيمة (مثلاً: Push/Pull/Legs)" value={split} onChangeText={setSplit} />
-      <TextInput style={styles.input} placeholder="تاريخ البداية" value={startDate} onChangeText={setStartDate} />
-      <TextInput style={styles.input} placeholder="تاريخ النهاية" value={endDate} onChangeText={setEndDate} />
+      <Text style={styles.label}>اختر اللاعب:</Text>
+      <View style={styles.pickerContainer}>
+        <Picker selectedValue={selectedPlayer} onValueChange={setSelectedPlayer} style={styles.picker}>
+          <Picker.Item label="-- اختر --" value="" />
+          {players.map((name, idx) => (
+            <Picker.Item key={idx} label={name} value={name} />
+          ))}
+        </Picker>
+      </View>
 
-      {Object.keys(musclesData).map(muscle => (
-        <View key={muscle} style={styles.section}>
-          <Text style={styles.muscleTitle}>💪 {muscle}</Text>
-          <View style={styles.exerciseList}>
-            {musclesData[muscle].map(ex => (
-              <TouchableOpacity
-                key={ex}
-                style={[
-                  styles.exerciseItem,
-                  selectedExercises[muscle]?.includes(ex) && styles.selectedExercise
-                ]}
-                onPress={() => toggleExercise(muscle, ex)}
-              >
-                <Text style={styles.exerciseText}>{ex}</Text>
-              </TouchableOpacity>
+      <Text style={styles.label}>تاريخ البداية:</Text>
+      <TouchableOpacity style={styles.dateButton} onPress={() => setShowStartPicker(true)}>
+        <Text style={styles.buttonText}>{startDate.toDateString()}</Text>
+      </TouchableOpacity>
+      {showStartPicker && (
+        <DateTimePicker
+          value={startDate}
+          mode="date"
+          minimumDate={new Date()}
+          onChange={(e, date) => {
+            setShowStartPicker(false);
+            if (date) setStartDate(date);
+          }}
+        />
+      )}
+
+      <Text style={styles.label}>تاريخ النهاية:</Text>
+      <TouchableOpacity style={styles.dateButton} onPress={() => setShowEndPicker(true)}>
+        <Text style={styles.buttonText}>{endDate.toDateString()}</Text>
+      </TouchableOpacity>
+      {showEndPicker && (
+        <DateTimePicker
+          value={endDate}
+          mode="date"
+          minimumDate={startDate}
+          onChange={(e, date) => {
+            setShowEndPicker(false);
+            if (date) setEndDate(date);
+          }}
+        />
+      )}
+
+      <Text style={styles.label}>مدة الاشتراك: {getDuration()} يوم</Text>
+
+      {/* زر الحفظ تم وضعه هنا لرفعه لأعلى */}
+      <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+        <Text style={styles.saveText}>💾 حفظ الخطة</Text>
+      </TouchableOpacity>
+
+      <Text style={styles.label}>🗓️ أيام التدريب:</Text>
+
+      {daysOfWeek.map(day => (
+        <View key={day}>
+          <TouchableOpacity onPress={() => toggleDay(day)} style={styles.dayButton}>
+            <Text style={styles.dayText}>📅 {day}</Text>
+          </TouchableOpacity>
+          {expandedDay === day &&
+            Object.keys(muscleExercises).map(muscle => (
+              <View key={muscle}>
+                <TouchableOpacity onPress={() => toggleMuscle(muscle)} style={styles.muscleButton}>
+                  <Text style={styles.muscleText}>💪 {muscle}</Text>
+                </TouchableOpacity>
+                {expandedMuscle === muscle && (
+                  <View style={styles.exerciseContainer}>
+                    {muscleExercises[muscle].map((exercise, idx) => (
+                      <TouchableOpacity
+                        key={idx}
+                        onPress={() => toggleExercise(day, muscle, exercise)}
+                        style={[
+                          styles.exerciseItem,
+                          workoutPlan[day]?.[muscle]?.includes(exercise) && styles.selected
+                        ]}>
+                        <Text style={styles.exerciseText}>{idx + 1}. {exercise}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </View>
             ))}
-          </View>
         </View>
       ))}
 
-      <TouchableOpacity style={styles.button} onPress={handleSave}>
-        <Text style={styles.buttonText}>💾 حفظ الخطة</Text>
-      </TouchableOpacity>
+      <View style={{ marginBottom: 100 }} />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#121212', padding: 16 },
-  title: { fontSize: 22, color: '#fff', marginBottom: 12, textAlign: 'center' },
-  input: {
-    backgroundColor: '#fff',
-    color: '#fff',
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 10,
-    
-    
-    
-  },
-  section: { marginBottom: 20 },
-  muscleTitle: { color: '#4CAF50', fontSize: 18, marginBottom: 6 },
-  exerciseList: { flexDirection: 'row', flexWrap: 'wrap' },
+  logo: { width: 140, height: 140, alignSelf: 'center', marginBottom: 10, resizeMode: 'contain' },
+  title: { fontSize: 22, color: '#FFD700', textAlign: 'center', marginBottom: 12 },
+  label: { color: '#FFD700', fontSize: 16, marginTop: 10 },
+  pickerContainer: { backgroundColor: '#1e1e1e', borderRadius: 8, marginBottom: 10 },
+  picker: { color: '#fff' },
+  dateButton: { backgroundColor: '#FFD700', padding: 12, borderRadius: 10, alignItems: 'center', marginVertical: 8 },
+  buttonText: { color: '#000', fontWeight: 'bold' },
+  dayButton: { backgroundColor: '#333', padding: 10, borderRadius: 8, marginTop: 10 },
+  dayText: { color: '#FFD700', fontSize: 16 },
+  muscleButton: { backgroundColor: '#222', padding: 8, borderRadius: 6, marginTop: 6 },
+  muscleText: { color: '#fff' },
+  exerciseContainer: { flexDirection: 'row', flexWrap: 'wrap', marginVertical: 4 },
   exerciseItem: {
     backgroundColor: '#2e2e2e',
     padding: 8,
-    borderRadius: 8,
+    borderRadius: 6,
     margin: 4,
+    width: '47%',
   },
-  selectedExercise: { backgroundColor: '#4CAF50' },
+  selected: { backgroundColor: '#FFD700' },
   exerciseText: { color: '#fff' },
-  button: {
-    backgroundColor: '#4CAF50',
-    padding: 16,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginVertical: 16,
-    
+  saveButton: {
+    backgroundColor: '#FFD700', padding: 16, borderRadius: 10,
+    alignItems: 'center', marginTop: 20
   },
-  buttonText: { color: '#fff', fontSize: 18 },
+  saveText: { color: '#000', fontSize: 18, fontWeight: 'bold' }
 });

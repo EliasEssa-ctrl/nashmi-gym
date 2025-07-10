@@ -3,18 +3,21 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, Image,
   KeyboardAvoidingView, ScrollView, Platform, Alert
 } from 'react-native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth, db } from '../config/firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
+import { RootStackParamList } from '../navigation/AppNavigator';
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function RoleSelectionScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp>();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  //fff
 
   const handleLogin = async () => {
     setError('');
@@ -40,9 +43,9 @@ export default function RoleSelectionScreen() {
       const role = userData.role;
 
       if (role === 'coach') {
-        navigation.navigate('Coach');
+        navigation.replace('PlayerPlans'); // ✅ التوجيه إلى PlayerPlans للمدرب
       } else {
-        navigation.navigate('Player', { username: userData.name || email });
+        navigation.navigate('Player', { username: userData.name || email }); // ✅ اللاعب كما هو
       }
 
     } catch (e: any) {

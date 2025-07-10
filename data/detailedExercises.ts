@@ -44,32 +44,27 @@ export const muscleExercises: Record<string, string[]> = {
     "Barbell Squat", "Leg Press", "Lunges", "Step-Ups", "Front Squat", "Hack Squat",
     "Bulgarian Split Squat", "Goblet Squat", "Sumo Squat", "Smith Machine Squat",
     "Leg Extensions", "Leg Curl", "Romanian Deadlift", "Walking Lunge", "Glute Bridge",
-    "Hip Thrust", "Cable Kickback", "Wall Sit", "Kettlebell Squat", "Resistance Band Lunge",
-  ],
-  سمانة: [
+    "Hip Thrust", "Cable Kickback", "Wall Sit", "Kettlebell Squat", "Resistance Band Lunge","Hip Thrust", "Glute Bridge", "Cable Kickback", "Donkey Kicks", "Step Ups",
+    "Bulgarian Split Squat", "Walking Lunges", "Kettlebell Swing", "Barbell Glute Bridge",
+    "Sumo Deadlift", "Hip Abduction Machine", "Resistance Band Kickbacks", "Clamshells",
+    "Frog Pumps", "Single-Leg Glute Bridge", "Glute Kickbacks", "Reverse Lunge",
+    "Cable Pull-Through", "Squat and Squeeze", "Glute March",
     "Standing Calf Raise", "Seated Calf Raise", "Leg Press Calf Raise", "Smith Machine Calf Raise",
     "Single Leg Calf Raise", "Donkey Calf Raise", "Jump Rope", "Box Jumps", "Weighted Calf Raise",
     "Calf Raise on Step", "Kettlebell Calf Raise", "Resistance Band Calf", "Machine Calf Raise",
     "Incline Calf Raise", "Farmer Walk on Toes", "Single-Leg Hops", "Barbell Calf Raise",
     "Wall Calf Raise", "Bodyweight Calf Raise", "Toe Press",
+
+  
   ],
-  Glutes: [
-    "Hip Thrust", "Glute Bridge", "Cable Kickback", "Donkey Kicks", "Step Ups",
-    "Bulgarian Split Squat", "Walking Lunges", "Kettlebell Swing", "Barbell Glute Bridge",
-    "Sumo Deadlift", "Hip Abduction Machine", "Resistance Band Kickbacks", "Clamshells",
-    "Frog Pumps", "Single-Leg Glute Bridge", "Glute Kickbacks", "Reverse Lunge",
-    "Cable Pull-Through", "Squat and Squeeze", "Glute March",
-  ],
+
+  
+    
   بطن: [
     "Crunch", "Plank", "Leg Raise", "Hanging Leg Raise", "Russian Twist",
     "Cable Crunch", "V-Ups", "Mountain Climbers", "Bicycle Crunch", "Sit-Ups",
     "Reverse Crunch", "Toe Touches", "Side Plank", "Flutter Kicks", "Hollow Hold",
     "Ab Rollout", "Jackknife Sit-Up", "Knee Tucks", "Medicine Ball Slam", "Dragon Flag",
   ],
-  ذراع: [
-    "Barbell Curl", "Dumbbell Curl", "Hammer Curl", "Tricep Pushdown", "Overhead Tricep Extension",
-    "Preacher Curl", "Concentration Curl", "Cable Curl", "Skull Crushers", "Incline Dumbbell Curl",
-    "Close Grip Bench Press", "Zottman Curl", "Machine Arm Curl", "EZ Bar Curl", "Kickbacks",
-    "Reverse Curl", "Spider Curl", "Diamond Push-Up", "Tricep Dip", "Cable Overhead Extension",
-  ],
+
 };
