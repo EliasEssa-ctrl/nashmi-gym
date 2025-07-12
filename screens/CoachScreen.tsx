@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import {
-  View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, BackHandler
+import {  View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, BackHandler
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import { db } from '../config/firebaseConfig';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { addDoc, collection, getDocs, query, where, updateDoc, doc } from 'firebase/firestore';
 import { muscleExercises } from '../data/detailedExercises';
 import { useRoute, RouteProp, useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -16,8 +16,7 @@ type CoachRouteProp = RouteProp<RootStackParamList, 'Coach'>;
 
 export default function CoachScreen() {
   const route = useRoute<CoachRouteProp>();
-  const navigation = useNavigation();
-
+  
   const [players, setPlayers] = useState<string[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState('');
   const [startDate, setStartDate] = useState(new Date());
@@ -27,7 +26,14 @@ export default function CoachScreen() {
   const [expandedDay, setExpandedDay] = useState('');
   const [expandedMuscle, setExpandedMuscle] = useState('');
   const [workoutPlan, setWorkoutPlan] = useState<Record<string, Record<string, string[]>>>({});
+const navigation = useNavigation();
 
+const handleLogout = () => {
+  navigation.reset({
+    index: 0,
+    routes: [{ name: 'Login' }],
+  });
+};
   useEffect(() => {
     const fetchPlayers = async () => {
       const snapshot = await getDocs(collection(db, 'users'));
@@ -202,6 +208,9 @@ export default function CoachScreen() {
       ))}
 
       <View style={{ marginBottom: 100 }} />
+      <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+              <Text style={styles.logoutText}>تسجيل الخروج</Text>
+            </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -227,6 +236,18 @@ const styles = StyleSheet.create({
     margin: 4,
     width: '47%',
   },
+  logoutButton: {
+  backgroundColor: '#FF5252',
+  padding: 12,
+  borderRadius: 10,
+  marginTop: 0,
+  marginBottom: 60,
+  alignItems: 'center',
+},
+logoutText: {
+  color: 'white',
+  fontWeight: 'bold',
+},
   selected: { backgroundColor: '#FFD700' },
   exerciseText: { color: '#fff' },
   saveButton: {

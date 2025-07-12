@@ -8,6 +8,8 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'PlayerPlans'>;
 
+
+
 interface Workout {
   startDate: string;
   endDate: string;
@@ -22,6 +24,12 @@ export default function PlayerPlansScreen() {
   const [plans, setPlans] = useState<Workout[]>([]);
   const navigation = useNavigation<NavigationProp>();
 
+const handleLogout = () => {
+  navigation.reset({
+    index: 0,
+    routes: [{ name: 'Login' }],
+  });
+};
   useEffect(() => {
     const fetchPlayers = async () => {
       const usersSnapshot = await getDocs(collection(db, 'users'));
@@ -152,6 +160,9 @@ export default function PlayerPlansScreen() {
           </TouchableOpacity>
         ))
       )}
+       <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+              <Text style={styles.logoutText}>تسجيل الخروج</Text>
+            </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -182,6 +193,17 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     fontSize: 13
   },
+  logoutButton: {
+  backgroundColor: '#FF5252',
+  padding: 12,
+  borderRadius: 10,
+  marginTop: 20,
+  alignItems: 'center',
+},
+logoutText: {
+  color: 'white',
+  fontWeight: 'bold',
+},
   restText: { color: '#999', marginLeft: 16, marginTop: 4, fontStyle: 'italic' },
   editButton: {
     backgroundColor: '#FFD700',

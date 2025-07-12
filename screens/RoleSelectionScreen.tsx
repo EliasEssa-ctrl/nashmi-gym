@@ -128,8 +128,7 @@ export default function RoleSelectionScreen() {
    <TouchableOpacity
     style={styles.guestButton}
     onPress={() => navigation.navigate('Coach', { selectedPlayer: ' '  })}
-  >
-    <Text style={styles.guestButtonText}>الدخول كـ لاعب</Text>
+  ><Text style={styles.guestButtonText}> الدخول كمدرب </Text>
   </TouchableOpacity>
 
 </View>
